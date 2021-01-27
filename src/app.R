@@ -5,6 +5,7 @@ library(dashBootstrapComponents)
 
 library(dplyr)
 library(ggplot2)
+library(plotly)
 
 app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
 
@@ -24,6 +25,7 @@ rm(list_val)
 
 
 
+
 app$layout(
   dbcContainer(
     list(
@@ -36,7 +38,7 @@ app$layout(
                 dccDropdown(
                   id='country_widget',
                   options = country_dropdown_values,
-                  value = 'US',
+                  value = c('US'),
                   multi = TRUE
                 ),
                 htmlLabel('Price'),
@@ -64,7 +66,8 @@ app$layout(
             ), 
             dbcCol(
                 list(
-                  htmlH1('INSERT SCATTERPLOT HERE')
+                  #htmlH1('INSERT SCATTERPLOT HERE')
+                  dccGraph(id='scatter-plot')
                   )
             ) 
           )
@@ -79,7 +82,8 @@ app$layout(
           ),
           dbcCol( 
             list(
-              htmlH1('STATS GO HERE!!!!!!!!!')
+              dccGraph(id='stats-plot')
+              #htmlH1('STATS GO HERE!!!!!!!!!')
             )
           )
         )
@@ -88,6 +92,76 @@ app$layout(
     )
   )
 )
+
+app$callback(
+  output('scatter-plot', 'figure'),
+  params = list(input('country_widget', 'value')),
+  function(xcol) {
+    selected_countries = xcol 
+    #!!sym(xcol)
+    #selected_countries = !!sym(xcol)
+    wine_country = wine_df %>% filter(country %in% selected_countries)
+    wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
+    
+    # filter by price and year
+    #wine_country = wine_country %>% 
+    #  filter((price >= price_range[1]) & (price <= price_range[2]) &
+    #           (year >= year_range[1]) & (year <= year_range[2]))
+    
+    p <- ggplot(wine_country) +
+      #%>% filter(country %in% !!sym(xcol))) +
+      aes(x = price,
+          y = points,
+          color = country) +
+      geom_point() +
+      scale_x_log10() +
+      ggthemes::scale_color_tableau()
+    ggplotly(p)
+  }
+)
+
+app$callback(
+  output('stats-plot', 'figure'),
+  list(input('country_widget', 'value')),
+  function(xcol, price_range = list(4, 1500), year_range = list(1900, 2017)) {
+    selected_countries = xcol #!!sym(xcol)
+    wine_country = wine_df %>% filter(country %in% selected_countries)
+    wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
+    
+    # filter by price and year
+    #wine_country <- wine_country %>% 
+    # filter((price >= price_range[1]) & (price <= price_range[2]) 
+    #       & (year >= year_range[1]) & (year <= year_range[2]))
+    
+    
+    p_1 <- ggplot(wine_country) +
+      aes(x = points,
+          y = reorder(variety, -points),
+          fill = country) +
+      #geom_point() +
+      geom_bar(stat = 'identity', position=position_dodge()) +
+      xlab("Rating Score") +
+      ylab("Variety") +
+      ggtitle("Average Rating of Top 15 Best Rated Wine") +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      ggthemes::scale_color_tableau()
+    
+    p_2 <- ggplot(wine_country) +
+      aes(x = price,
+          y = reorder(variety, -price),
+          fill = country) +
+      geom_bar(stat = 'identity', position=position_dodge()) +  
+      xlab("Price") +
+      ylab("Variety") +
+      ggtitle("Average Price of Top 15 Best Rated Wine") +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      ggthemes::scale_color_tableau() 
+    
+    subplot(ggplotly(p_1), ggplotly(p_2), nrows = 1, shareY=FALSE, titleX = TRUE)
+    
+  }
+)
+
 
 
 app$run_server(debug = T)
