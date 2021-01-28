@@ -17,7 +17,7 @@ country_ids <- read.csv('data/geo/country-ids-revised.csv')
 country_dropdown_values <- list()
 for (i in 1:nrow(country_ids)) {
   list_val <- list()
-  list_val <- list(label = country_ids$name[i] , value = country_ids$id[i])
+  list_val <- list(label = country_ids$name[i] , value = country_ids$name[i])
   country_dropdown_values[[i]] <- list_val
 }
 rm(list_val)
