@@ -12,6 +12,11 @@ app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
 wine_df <- read.csv("data/processed/wine.csv")
 country_ids <- read.csv('data/geo/country-ids-revised.csv') 
 
+#### data wrangling for map ####
+map_df <- read.csv("https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv")
+map_df <- map_df %>% 
+  mutate(COUNTRY = replace(COUNTRY, COUNTRY == "United States", "US"))
+wine_countrycode <- left_join(wine_df, map_df, by = c("country"="COUNTRY"))
 
 #### dropdown list generation ####
 country_dropdown_values <- list()
@@ -77,7 +82,8 @@ app$layout(
         list( 
           dbcCol( 
             list(
-              htmlH2('MAP GOES HERE!!!!!!')
+              #htmlH2('MAP GOES HERE!!!!!!')
+              dccGraph(id='map-area')
             ), md=6
           ),
           dbcCol( 
@@ -161,6 +167,33 @@ app$callback(
     
   }
 )
+
+
+app$callback(
+  output('map-area', 'figure'),
+  list(input('price_slider', 'value'),
+       input('score_slider', 'value'),
+       input('year_slider', 'value')),
+  function(price_range = list(4,1500), points_range = list(80,100), year_range = list(1900, 2017)) {
+    # filter criteria
+    wine_countrycode <- wine_countrycode %>% 
+      filter(price >= price_range[[1]] & price <= price_range[[2]] & 
+               points >= points_range[[1]] & points<= points_range[[2]] &
+               year >= year_range[[1]] & year<= year_range[[2]])
+    
+    # data wrangling
+    wine_counts <- wine_countrycode %>% 
+      group_by(CODE, country) %>%
+      summarize(counts = n())
+    
+    # draw map
+    map_fig <- plot_ly(wine_counts, type='choropleth', locations=~CODE, z=~counts)
+    
+    # format
+    map_fig <- map_fig %>% layout(title = list(text = 'Wine Producing Map'))
+    
+    ggplotly(map_fig)
+  })
 
 
 
