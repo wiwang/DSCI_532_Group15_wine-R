@@ -155,7 +155,7 @@ app$callback(
       geom_bar(stat = 'identity', position=position_dodge()) +
       xlab("Rating Score") +
       ylab("Variety") +
-      ggtitle("Average Rating of Top 15 Best Rated Wine") +
+      ggtitle("Average Rating of Top Rated Wine") +
       theme(plot.title = element_text(hjust = 0.5),
             axis.title.x = element_text(size = 10),
             axis.title.y = element_text(size = 8)) +
@@ -168,7 +168,7 @@ app$callback(
       geom_bar(stat = 'identity', position=position_dodge()) +  
       xlab("Price") +
       ylab("Variety") +
-      ggtitle("Average Score & Price of Top 15 Best Rated Wine") +
+      ggtitle("Average Score & Price of Top Rated Wine") +
       theme(plot.title = element_text(hjust = 0.5),
             axis.title.x = element_text(size = 10),
             axis.title.y = element_text(size = 8)) +
