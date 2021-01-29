@@ -100,8 +100,11 @@ app$layout(
 )
 
 app$callback(
-  output('scatter-plot', 'figure'),
-  params = list(input('country_widget', 'value')),
+  output = list('scatter-plot', 'figure'),
+  params = list(input('country_widget', 'value'),
+                input('price_slider', 'value'),
+                input('score_slider', 'value'),
+                input('year_slider', 'value')),
   function(xcol) {
     selected_countries = xcol 
     #!!sym(xcol)
@@ -110,9 +113,10 @@ app$callback(
     wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
     
     # filter by price and year
-    #wine_country = wine_country %>% 
-    #  filter((price >= price_range[1]) & (price <= price_range[2]) &
-    #           (year >= year_range[1]) & (year <= year_range[2]))
+    wine_country <- wine_country %>% 
+      filter(price >= price_range[[1]] & price <= price_range[[2]] & 
+               points >= points_range[[1]] & points<= points_range[[2]] &
+               year >= year_range[[1]] & year<= year_range[[2]])
     
     p <- ggplot(wine_country) +
       #%>% filter(country %in% !!sym(xcol))) +
@@ -127,18 +131,21 @@ app$callback(
 )
 
 app$callback(
-  output('stats-plot', 'figure'),
-  list(input('country_widget', 'value')),
+  output = list('stats-plot', 'figure'),
+  params = list(input('country_widget', 'value'),
+                input('price_slider', 'value'),
+                input('score_slider', 'value'),
+                input('year_slider', 'value')),
   function(xcol, price_range = list(4, 1500), year_range = list(1900, 2017)) {
     selected_countries = xcol #!!sym(xcol)
     wine_country = wine_df %>% filter(country %in% selected_countries)
     wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
     
     # filter by price and year
-    #wine_country <- wine_country %>% 
-    # filter((price >= price_range[1]) & (price <= price_range[2]) 
-    #       & (year >= year_range[1]) & (year <= year_range[2]))
-    
+    wine_country <- wine_country %>% 
+      filter(price >= price_range[[1]] & price <= price_range[[2]] & 
+               points >= points_range[[1]] & points<= points_range[[2]] &
+               year >= year_range[[1]] & year<= year_range[[2]])
     
     p_1 <- ggplot(wine_country) +
       aes(x = points,
@@ -149,7 +156,9 @@ app$callback(
       xlab("Rating Score") +
       ylab("Variety") +
       ggtitle("Average Rating of Top 15 Best Rated Wine") +
-      theme(plot.title = element_text(hjust = 0.5)) +
+      theme(plot.title = element_text(hjust = 0.5),
+            axis.title.x = element_text(size = 8),
+            axis.title.y = element_text(size = 8)) +
       ggthemes::scale_color_tableau()
     
     p_2 <- ggplot(wine_country) +
@@ -160,10 +169,13 @@ app$callback(
       xlab("Price") +
       ylab("Variety") +
       ggtitle("Average Price of Top 15 Best Rated Wine") +
-      theme(plot.title = element_text(hjust = 0.5)) +
-      ggthemes::scale_color_tableau() 
+      theme(plot.title = element_text(hjust = 0.5),
+            axis.title.x = element_text(size = 8),
+            axis.title.y = element_text(size = 8)) +
+      ggthemes::scale_color_tableau()
     
-    subplot(ggplotly(p_1), ggplotly(p_2), nrows = 1, shareY=FALSE, titleX = TRUE)
+    subplot(ggplotly(p_1), ggplotly(p_2), nrows = 2,
+            margin = c(0, 0, 0, 0.15))
     
   }
 )
