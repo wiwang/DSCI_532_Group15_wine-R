@@ -43,7 +43,7 @@ app$layout(
                 dccDropdown(
                   id='country_widget',
                   options = country_dropdown_values,
-                  value = c('US'),
+                  value = list('US'),
                   multi = TRUE
                 ),
                 htmlLabel('Price'),
@@ -100,17 +100,17 @@ app$layout(
 )
 
 app$callback(
-  output = list('scatter-plot', 'figure'),
+  output('scatter-plot', 'figure'),
   params = list(input('country_widget', 'value'),
                 input('price_slider', 'value'),
                 input('score_slider', 'value'),
                 input('year_slider', 'value')),
-  function(xcol) {
+  function(xcol=list('US'), price_range = list(4,1500), points_range = list(80,100), year_range = list(1900, 2017)) {
     selected_countries = xcol 
     #!!sym(xcol)
     #selected_countries = !!sym(xcol)
     wine_country = wine_df %>% filter(country %in% selected_countries)
-    wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
+    #wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
     
     # filter by price and year
     wine_country <- wine_country %>% 
@@ -131,12 +131,12 @@ app$callback(
 )
 
 app$callback(
-  output = list('stats-plot', 'figure'),
+  output('stats-plot', 'figure'),
   params = list(input('country_widget', 'value'),
                 input('price_slider', 'value'),
                 input('score_slider', 'value'),
                 input('year_slider', 'value')),
-  function(xcol, price_range = list(4, 1500), year_range = list(1900, 2017)) {
+  function(xcol=list('US'), price_range = list(4,1500), points_range = list(80,100), year_range = list(1900, 2017)) {
     selected_countries = xcol #!!sym(xcol)
     wine_country = wine_df %>% filter(country %in% selected_countries)
     wine_country =  wine_country %>% slice_max(order_by = points, n = 15)
@@ -157,7 +157,7 @@ app$callback(
       ylab("Variety") +
       ggtitle("Average Rating of Top 15 Best Rated Wine") +
       theme(plot.title = element_text(hjust = 0.5),
-            axis.title.x = element_text(size = 8),
+            axis.title.x = element_text(size = 10),
             axis.title.y = element_text(size = 8)) +
       ggthemes::scale_color_tableau()
     
@@ -168,14 +168,13 @@ app$callback(
       geom_bar(stat = 'identity', position=position_dodge()) +  
       xlab("Price") +
       ylab("Variety") +
-      ggtitle("Average Price of Top 15 Best Rated Wine") +
+      ggtitle("Average Score & Price of Top 15 Best Rated Wine") +
       theme(plot.title = element_text(hjust = 0.5),
-            axis.title.x = element_text(size = 8),
+            axis.title.x = element_text(size = 10),
             axis.title.y = element_text(size = 8)) +
       ggthemes::scale_color_tableau()
     
-    subplot(ggplotly(p_1), ggplotly(p_2), nrows = 2,
-            margin = c(0, 0, 0, 0.15))
+    subplot(ggplotly(p_1), ggplotly(p_2), nrows = 2, shareY=FALSE, titleX = TRUE, margin = c(0, 0, 0, 0.15))
     
   }
 )
@@ -208,6 +207,6 @@ app$callback(
   })
 
 
-
-app$run_server(host='0.0.0.0')
+app$run_server(debug = T)
+#app$run_server(host='0.0.0.0')
 
